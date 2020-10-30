@@ -59,7 +59,7 @@ void Tost();                          //
 #define DEBUG_UART 0                // отладка, 0 выключено, 1 включено
 #define LED_TOWER                   // светодиоды на башне. Раcкомментировать если есть
   #if (DEBUG_UART == 0)
-    #define BUTTON_TOWER            // сенсорная кнопка на башне. Раскомментировать если есть
+    //#define BUTTON_TOWER            // сенсорная кнопка на башне. Раскомментировать если есть
   #endif
 //#define BAT_MONITOR_ON            // включение в коде всё что звязано с АКБ, закомментировать если нет АКБ вообще.
   #ifdef BAT_MONITOR_ON
@@ -109,17 +109,17 @@ void Tost();                          //
   #define PUMP_POWER 13       // Помпа для Arduino NANO
  
  #ifdef BAT_MONITOR_ON
-   #define BAT_PIN A3         // Пин замера напряжения АКБ для Arduino NANO
+   #define BAT_PIN A7         // Пин замера напряжения АКБ для Arduino NANO
  #endif
 
   #define BUSY_PIN 12         // Пин готовности DF плеера для Arduino NANO
 
  #ifdef LED_TOWER
-    #define LED_PIN2 A3        // Пин второй ленты для Arduino NANO
+    #define LED_PIN2 A3       // Пин второй ленты для Arduino NANO
  #endif
 
  #ifdef BUTTON_TOWER
-    #define BUT_TOWER_PIN 1 //A7   // Пин кнопки на башне для Arduino NANO
+    #define BUT_TOWER_PIN A6  // A7   // Пин кнопки на башне для Arduino NANO
  #endif
 
 //****************************************************************************************************************
