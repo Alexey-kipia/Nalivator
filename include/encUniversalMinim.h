@@ -55,6 +55,7 @@ void encMinim::tick() {
     _clickFlag  = true;
     _countClick++;
   }
+  
   if (_swState && _swFlag && millis() - _debTimer > 50 ) {
     _debTimer = millis();
     _swFlag = false;
@@ -78,8 +79,6 @@ void encMinim::tick() {
 void encMinim::rst() {
   _encState = 0;
 }
-
-
 
 
 boolean encMinim::isRight() {
