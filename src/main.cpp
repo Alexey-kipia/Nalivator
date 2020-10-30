@@ -32,7 +32,7 @@ void oled_Setup_Multirazliv();        // Экран настройки МУЛЬ�
 void oled_Mushketery();               // Экраны меню "МУШКЕТЁРЫ"
 void play_Mushketery();               // Режим МУШКЕТЕРЫ
 
-void play_track(uint8_t trackNum);    // 
+void Play_track(uint8_t trackNum);    // Воспроизведение трека
 void flowTick();                      // 
 void flowRoutnie();                   // 
 void servo_move(uint8_t target);      // ********** ? **********
@@ -306,7 +306,7 @@ void setup() {
   delay (100);
   myMP3.begin(Serial3); //инициализируем Serial порт МП3 плейера 14 и 15 Пины меги
 #endif
-  //********** настройка пинов **********
+//********** настройка пинов **********
   pinMode(PUMP_POWER, OUTPUT);
 #if (PUMP_LEVEL == 0)
   digitalWrite(PUMP_POWER, HIGH);
@@ -399,9 +399,9 @@ void setup() {
   myMP3.volume(volume);
   delay (100);
 #if(SOUND_THEME == 1)
-  play_track(50);                                     //танк завёлся
+  Play_track(50);                                     //танк завёлся
 #else
-  play_track(1);                                      // Проигрываем "mp3/0001.mp3"(0001_get started!.mp3)
+  Play_track(1);                                      // Проигрываем "mp3/0001.mp3"(0001_get started!.mp3)
 #endif
   lcd.init();                                         // Инициализация дисплея
   lcd.backlight();
@@ -457,7 +457,8 @@ void loop() {
 
 
 //****************************************************************************************************
- void play_track(uint8_t trackNum) {
+//********** Воспроизведение трека **********
+void Play_track(uint8_t trackNum) {
   if (!player && volume != 0 ) myMP3.playFromMP3Folder(trackNum);
 }
 
@@ -477,11 +478,11 @@ void flowTick() {
         LEDchanged = true;
         //DEBUG("set glass");
         //DEBUG(i);
-        if (!systemON && !save && !playMush)play_track(i + 20);   //  трек в папке mp3, с 20 по 25
+        if (!systemON && !save && !playMush)Play_track(i + 20);   //  трек в папке mp3, с 20 по 25
         yesGlass++;
         SAVEtimer.reset();
         if (save) {
-          play_track(17);                                   // звук просыпания
+          Play_track(17);                                   // звук просыпания
           save = false;
           Enc.rst();
           lcd.backlight();
@@ -521,7 +522,7 @@ void flowTick() {
           pumpOFF();                                        // помпу выкл
           moving = false;
           if ( MenuFlag == 20 || promivka ) curPumping = -1;
-          else play_track(2);                               // трек в папке mp3,  кто то снял рюмку при наливе
+          else Play_track(2);                               // трек в папке mp3,  кто то снял рюмку при наливе
         }
         //DEBUG("take glass");
         // DEBUG(i);
@@ -565,11 +566,11 @@ void flowRoutnie() {
             if (!noGlass) {                                     // нашли хоть одну рюмку
 #if(SOUND_THEME == 1)
               if ( digitalRead(BUSY_PIN) && !promivka && MenuFlag != 20) {
-                play_track(53); //  трек в папке mp3 ,  движения башни танка
+                Play_track(53); //  трек в папке mp3 ,  движения башни танка
               }
 #else
               if ((DrinkCount == 0 || digitalRead(BUSY_PIN)) && !promivka && MenuFlag != 20) {
-                play_track(18);                                 // трек в папке mp3 , мелодия во время разлива
+                Play_track(18);                                 // трек в папке mp3 , мелодия во время разлива
               }
 #endif
               curPumping = i;                                   // запоминаем выбор
@@ -583,7 +584,7 @@ void flowRoutnie() {
       if (noGlass) {                                            // если не нашли ни одной рюмки
 #if(SOUND_THEME == 1)
         if ( muveBack) {
-          play_track(53);                                       // трек в папке mp3 ,  движения башни танка
+          Play_track(53);                                       // трек в папке mp3 ,  движения башни танка
           muveBack = false;
         }
 
@@ -626,7 +627,7 @@ void flowRoutnie() {
               print_lcd(6);                                     // СНИМИТЕ РЮМКИ!
             }
             returnMenu = true;
-            play_track(3);                                      // трек в папке mp3,  типа предупреждение нет рюмок
+            Play_track(3);                                      // трек в папке mp3,  типа предупреждение нет рюмок
 
 #ifdef LED_TOWER
             if (ledShowOn) {
@@ -674,7 +675,7 @@ void flowRoutnie() {
           lcd.setCursor(11, 1);
           print_lcd(4);                                         // пробел 3
 #if(SOUND_THEME == 1)
-          play_track(51);  //выстрел танка
+          Play_track(51);  //выстрел танка
 #endif
         }
         //DEBUG("fill glass");
@@ -774,7 +775,7 @@ void servo_move(uint8_t target) {
     if ( pos == target ) {
       deadTime = true;
 #if(SOUND_THEME == 1)
-      if (!playMush && !promivka && Menu != 3) play_track(52); //клик башни
+      if (!playMush && !promivka && Menu != 3) Play_track(52); //клик башни
 #endif
     }
   }
@@ -788,7 +789,7 @@ void servo_move(uint8_t target) {
 // ********** ? **********
 void energy_saving() {
   if (sleepTime != 0 && !systemON && !tost && !save && SAVEtimer.isReady()) {
-    play_track(16);
+    Play_track(16);
     lcd.noBacklight();
     save = true;
     Strip.clear();
@@ -1434,7 +1435,7 @@ void EncTick() {
   if ( Enc.isSingle()) { // одиночный клик
     SAVEtimer.reset();
     if (save) {
-      play_track(17);
+      Play_track(17);
       save = false;
       lcd.backlight();
       check = true; //  проверяем рюмки
@@ -1461,7 +1462,7 @@ void EncTick() {
         lcd.clear();
         lcd.setCursor(5, 1);
         print_lcd(70);//  ОТБОЙ!
-        play_track(4); //  трек в папке mp3,
+        Play_track(4); //  трек в папке mp3,
 
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
