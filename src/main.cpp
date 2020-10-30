@@ -1,14 +1,14 @@
 //****************************************************************************************************************
-#include <Arduino.h>
-#include <EEPROM.h>
-#include "LCD_1602_RUS.h"
-#include "DFPlayerMini_Fast.h"
-#include "encUniversalMinim.h"
-#include "Adafruit_TiCoServo.h"
-#include "timer2Minim.h"
-#include "Stroki_menu.h"
-#include "Random.h"
-#include "microLED.h"
+#include <Arduino.h>            // Основная библиотека
+#include <EEPROM.h>             // Библиотека работы со встроенной памятью EEPROM
+#include "LCD_1602_RUS.h"       // Библиотека для работы с LCD
+#include "DFPlayerMini_Fast.h"  // Библиотека для работы с MP3 плеером
+#include "encUniversalMinim.h"  // Библиотека для работы с Энкодером
+#include "Adafruit_TiCoServo.h" // Библиотека для работы с SERVO
+#include "timer2Minim.h"        //
+#include "Stroki_menu.h"        //
+#include "Random.h"             //
+#include "microLED.h"           // Библиотека для работы с адресуемыми светодиодами
 //****************************************************************************************************************
 void setup();                             // Подпрограмма начальных установок
 void loop();                              // Основной цикл
@@ -40,11 +40,10 @@ void Servo_move(uint8_t target);          // Управление SERVO
 void Energy_Saving();                     // Энергосбережение
 void Mon_Battery();                       // Монитор питания и защита батареи
 
-void ret_menu();  //
-void mix();       //
-void mix_music(); //
-void play_next(); //
-//void move_enc(uint8_t* var, int16_t shift, int16_t lowLimit, int16_t upLimit, bool cycle);
+void ret_menu();                    //
+void mix();                         //
+void mix_music();                   //
+void play_next();                   //
 void num_folder(uint8_t subFolder); //
 void bar_man(uint8_t subBarmen);    //
 void mix_track();                   //
@@ -73,8 +72,8 @@ void Tost();                        //
 #define PRE_PAUSE 1000UL       // пауза серво перед движением к рюмке
 #define POST_PAUSE 500UL       // пауза после остановки сервы до включения помпы
 #define MEMORY_ON              // включение записи параметров в память, закомментировано - значит выключено!
-#define START_POS_SERVO_GLASS1 // раскомментировать, если нужна начальная позиция серво в первой рюмке 
-                                  //#define SERVO_CHANGE_DIRECTION    // раскомментировать, отзеркалить движение серво
+#define START_POS_SERVO_GLASS1 // раскомментировать, если нужна начальная позиция серво в первой рюмке \
+//#define SERVO_CHANGE_DIRECTION    // раскомментировать, отзеркалить движение серво
 #ifdef SERVO_CHANGE_DIRECTION
 #define INITAL_ANGLE_SERVO 180 // начальный угол на который становится серво, если включен режим зеркало, подбирать в меньшую сторону, если упирается серво.
 #endif
@@ -82,8 +81,7 @@ void Tost();                        //
 // изменить значения если серво не доезжает до нужных углов, не всегда эффективно!
 #define SERVO_MIN 544  // уменьшить если не доезжает до 0° (544 по умолчанию)
 #define SERVO_MAX 2400 // увеличить если не доезжает до 180° (2400 по умолчанию )
-
-#define ORDER_GRB // порядок цветов ORDER_GRB / ORDER_RGB / ORDER_BRG
+#define ORDER_GRB      // порядок цветов ORDER_GRB / ORDER_RGB / ORDER_BRG
 
 //****************************************************************************************************************
 //======== Пины Arduino NANO ========
@@ -97,14 +95,11 @@ const uint8_t SW_pins[] = {A0, A1, A2, 6, 7, 8}; // Пины концевико�
 const uint8_t SW_pins[] = {8, 7, A3, A2, A1, A0}; // Пины концевиков для Arduino NANO
 #endif
 
-#define Lcd_CLK 2 // Энкодер Lcd_CLK для Arduino NANO
-#define Lcd_DT 3  // Энкодер Lcd_DT для Arduino NANO
-#define Lcd_SW 4  // Энкодер Lcd_SW для Arduino NANO
-
-#define LED1_PIN 5 // Лента 1 для Arduino NANO
-
-#define SERVO_PIN 9 // Servo для Arduino NANO. Можно только 9, 10 Пины!!!!!!!!
-
+#define Lcd_CLK 2     // Энкодер Lcd_CLK для Arduino NANO
+#define Lcd_DT 3      // Энкодер Lcd_DT для Arduino NANO
+#define Lcd_SW 4      // Энкодер Lcd_SW для Arduino NANO
+#define LED1_PIN 5    // Лента 1 для Arduino NANO
+#define SERVO_PIN 9   // Servo для Arduino NANO. Можно только 9, 10 Пины!!!!!!!!
 #define PUMP_POWER 13 // Помпа для Arduino NANO
 
 #ifdef BAT_MONITOR_ON
@@ -135,7 +130,7 @@ const uint8_t SW_pins[] = {A8, A7, A3, A2, A1, A0}; // Пины концевик
 #ifdef BAT_MONITOR_ON
 #define BAT_PIN A9 // Пин замера напряжения акб для Arduino mega
 #endif
-#define BUSY_PIN 10 // Пин готовности DF плеера для Arduino mega
+#define BUSY_PIN 10 // Пин готовности DF плеера для Arduino mega \
                     // Пины ЭНКОДЕРА
 #define Lcd_CLK 7   // для Arduino mega
 #define Lcd_DT 6    // для Arduino mega
@@ -154,36 +149,37 @@ const uint8_t SW_pins[] = {A8, A7, A3, A2, A1, A0}; // Пины концевик
 //********** ИНИЦИАЛИЗАЦИЯ **********
 LEDdata Leds[NUM_SHOTS];                    // буфер ленты типа LEDdata (размер зависит от COLOR_DEBTH)
 microLED Strip1(Leds, NUM_SHOTS, LED1_PIN); // объект лента
-#ifdef LED_TOWER
-#define NUMLEDS 16                         // колличество светиков во второй ленте
-LEDdata Leds2[NUMLEDS];                    // буфер ленты типа LEDdata (размер зависит от COLOR_DEBTH)
-microLED Strip2(Leds2, NUMLEDS, LED2_PIN); // объект лента
-timerMinim TOWERtimer(20);
-bool mig = false;
-bool rainbow = true;
-bool clearLed = false;
-#endif
-#ifdef Button_Tower
-bool stateBut = false;
-#endif
-encMinim Enc(Lcd_CLK, Lcd_DT, Lcd_SW, 0); // пин Lcd_CLK, пин Lcd_DT, пин Lcd_SW, направление (0/1)
-LCD_1602_RUS lcd(0x27, 16, 2);            //Адрес дисплея 0x27 или 0x3F, подключение А4-SDA-зеленый, А5-SCL-желтый
-DFPlayerMini_Fast myMP3;
-Adafruit_TiCoServo servo;
+#ifdef LED_TOWER                            //
+#define NUMLEDS 16                          // колличество светиков во второй ленте
+LEDdata Leds2[NUMLEDS];                     // буфер ленты типа LEDdata (размер зависит от COLOR_DEBTH)
+microLED Strip2(Leds2, NUMLEDS, LED2_PIN);  // объект лента
+encMinim Enc(Lcd_CLK, Lcd_DT, Lcd_SW, 0);   // пин Lcd_CLK, пин Lcd_DT, пин Lcd_SW, направление (0/1)
+LCD_1602_RUS lcd(0x27, 16, 2);              //Адрес дисплея 0x27 или 0x3F, подключение А4-SDA-зеленый, А5-SCL-желтый
+DFPlayerMini_Fast myMP3;                    //
+Adafruit_TiCoServo servo;                   //
 
-timerMinim LEDtimer(50);
-timerMinim FLOWdebounce(20);
-timerMinim WAITtimer(PRE_PAUSE);
-timerMinim TIMEProcent(2000);
-timerMinim SAVEtimer(30000); // таймер спящего режима
-timerMinim PAUSEtimer(4000); // таймер паузы
-timerMinim PLAYtimer(2000);  // таймер переключения треков
+timerMinim TOWERtimer(20); //
+bool mig = false;          //
+bool rainbow = true;       //
+bool clearLed = false;     //
+#endif                     //
+#ifdef Button_Tower        //
+bool stateBut = false;     //
+#endif                     //
+
+timerMinim LEDtimer(50);         //
+timerMinim FLOWdebounce(20);     //
+timerMinim WAITtimer(PRE_PAUSE); //
+timerMinim TIMEProcent(2000);    //
+timerMinim SAVEtimer(30000);     // таймер спящего режима
+timerMinim PAUSEtimer(4000);     // таймер паузы
+timerMinim PLAYtimer(2000);      // таймер переключения треков
 
 int16_t time50ml;           // время налива 50 мл
 uint8_t shotPos[NUM_SHOTS]; // = 0; // позиция рюмок, в сетапе считается из памяти.
-//uint8_t shotPos[] = {0, 0, 0, 0, 0, 0}; // позиция рюмок, в сетапе считается из памяти.
-int16_t address = 0; // Переменная для хранения адреса памяти
-int16_t bright = 0;  // яркость led, считается из памяти
+int8_t rumka[NUM_SHOTS];    // массив рандомных позиций рюмок
+int16_t address = 0;        // Переменная для хранения адреса памяти
+int16_t bright = 0;         // яркость led, считается из памяти
 int16_t Procent = 0;
 int8_t count = -1;
 int8_t curPumping = -1;
@@ -239,7 +235,6 @@ bool noTost = false;
 bool playMush = false;
 bool flagMush = false;
 uint8_t noDoliv;
-int8_t rumka[NUM_SHOTS]; // массив рандомных позиций рюмок
 bool readySystem = true;
 int8_t drift = 0;
 #if (SOUND_THEME == 1)
