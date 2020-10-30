@@ -39,9 +39,8 @@
 #pragma once
 #include "ws2812_send.h"
 
-
 #ifndef COLOR_DEBTH
-#define COLOR_DEBTH 3	// по умолчанию 24 бита
+#define COLOR_DEBTH 3 // по умолчанию 24 бита
 #endif
 
 #ifdef REPLACE_FASTLED
@@ -55,28 +54,31 @@ typedef uint8_t LEDdata;
 #elif (COLOR_DEBTH == 2)
 typedef uint16_t LEDdata;
 #elif (COLOR_DEBTH == 3)
-typedef struct LEDdata {
+typedef struct LEDdata
+{
 	byte r, g, b;
 	// default values are UNINITIALIZED
 	inline LEDdata() __attribute__((always_inline))
 	{
 	}
-	
+
 	// allow construction from 32-bit (really 24-bit) bit 0xRRGGBB color code
-	inline LEDdata(uint32_t colorcode)  __attribute__((always_inline))
+	inline LEDdata(uint32_t colorcode) __attribute__((always_inline))
 	: r((colorcode >> 16) & 0xFF), g((colorcode >> 8) & 0xFF), b((colorcode >> 0) & 0xFF)
 	{
 	}
-	
-	inline LEDdata& operator= (const uint32_t colorcode) __attribute__((always_inline))
+
+	inline LEDdata &operator=(const uint32_t colorcode) __attribute__((always_inline))
 	{
 		r = (colorcode >> 16) & 0xFF;
-		g = (colorcode >>  8) & 0xFF;
-		b = (colorcode >>  0) & 0xFF;
+		g = (colorcode >> 8) & 0xFF;
+		b = (colorcode >> 0) & 0xFF;
 		return *this;
 	}
 };
-inline __attribute__((always_inline)) bool operator== (const LEDdata& lhs, const LEDdata& rhs) {
+
+inline __attribute__((always_inline)) bool operator==(const LEDdata &lhs, const LEDdata &rhs)
+{
 	return (lhs.r == rhs.r) && (lhs.g == rhs.g) && (lhs.b == rhs.b);
 }
 #endif
@@ -123,47 +125,48 @@ enum COLORS {
 */
 
 // Функции
-LEDdata mRGB(byte r, byte g, byte b);	// RGB 255, 255, 255
-LEDdata mWHEEL(int color);				// цвета 0-1530
+LEDdata mRGB(byte r, byte g, byte b); // RGB 255, 255, 255
+LEDdata mWHEEL(int color);			  // цвета 0-1530
 //LEDdata mHEX(uint32_t color);			// HEX цвет
-LEDdata mHSV(byte h, byte s, byte v);	// HSV 255, 255, 255
+LEDdata mHSV(byte h, byte s, byte v); // HSV 255, 255, 255
 //LEDdata mCOLOR(COLORS color);			// цвет
 
 // =================== КЛАСС ===================
-class microLED {
+class microLED
+{
 public:
 	// ЛЕНТА: имя буфера, количество ледов, пин
 	microLED(LEDdata *LEDarray, int LEDamount, byte pin);
-	
+
 	// МАТРИЦА: имя буфера, пин, ширина матрицы, высота матрицы, тип матрицы, угол подключения, направление	(см. ПОДКЛЮЧЕНИЕ МАТРИЦЫ)
 	//microLED(LEDdata *LEDarray, byte pin, byte width, byte height, M_type type, M_connection conn, M_dir dir);
-	
+
 	// лента и матрица
-	void setRGB(int num, byte r, byte g, byte b);	// RGB
-	void setHSV(int num, byte h, byte s, byte v); 	// HSV
+	void setRGB(int num, byte r, byte g, byte b); // RGB
+	void setHSV(int num, byte h, byte s, byte v); // HSV
 	//void setHEX(int num, uint32_t color);			// HEX
 	//void setColor(int num, COLORS color);			// стандартный цвет (см. "Стандартные цвета")
-	void colorWheel(int num, int color);			// цвет 0-1530	
+	void colorWheel(int num, int color); // цвет 0-1530
 	//void fill(LEDdata color);						// заливка цветом (mRGB, mWHEEL, mHEX, mHSV)
-	void setLED(int n, LEDdata color);				// ставим цвет светодиода (mRGB, mWHEEL, mHEX, mHSV)	
+	void setLED(int n, LEDdata color); // ставим цвет светодиода (mRGB, mWHEEL, mHEX, mHSV)
 	//uint32_t getColorHEX(int num);					// получить HEX цвет диода (для сравнения и т.п.)
 	//LEDdata getColor(int num);						// получить цвет диода в LEDdata
 	//void fade(int num, byte val);					// уменьшить яркость на val
-	
-	void setBrightness(byte newBright);				// яркость 0-255
-	void clear();									// очистка
-	void show();									// отправка
-	
+
+	void setBrightness(byte newBright); // яркость 0-255
+	void clear();						// очистка
+	void show();						// отправка
+
 	// матрица
 	//void setPix(int x, int y, LEDdata color);		// ставим цвет пикселя x y в LEDdata (mRGB, mWHEEL, mHEX, mHSV)
 	//uint32_t getColorHEX(int x, int y);				// получить цвет пикселя в HEX
 	//LEDdata getColor(int x, int y);					// получить цвет пикселя в LEDdata
 	//void fadePix(int x, int y, byte val);			// уменьшить яркость пикселя на val
 	//uint16_t getPixNumber(int x, int y);			// получить номер пикселя в ленте по координатам
-	
+
 	//void setVoltage(int mv);						// установить напряжение питания в мв, по умолч. 5000 (для расчёта тока)
 	//void setMaxCurrent(int ma);						// установить максимальный ток (автокоррекция яркости). 0 - выключено
-	
+
 private:
 	//void setCurrentSettings();
 	//byte correctBright();
@@ -179,17 +182,18 @@ private:
 	//int _voltage = 5000;
 	//int _idleCurrent = 0;
 	//byte _oneLedCurrent = 0;
-	
+
 	const volatile uint8_t *ws2812_port;
 	volatile uint8_t *ws2812_port_reg;
 	uint8_t pinMask;
 };
 
 // ================== МЕТОДЫ ==================
-microLED::microLED(LEDdata *LEDarray, int LEDamount, byte pin) {
+microLED::microLED(LEDdata *LEDarray, int LEDamount, byte pin)
+{
 	_numLEDs = LEDamount;
 	LEDbuffer = LEDarray;
-	
+
 	pinMask = digitalPinToBitMask(pin);
 	ws2812_port = portOutputRegister(digitalPinToPort(pin));
 	ws2812_port_reg = portModeRegister(digitalPinToPort(pin));
@@ -216,27 +220,30 @@ microLED::microLED(LEDdata *LEDarray, byte pin, byte width, byte height, M_type 
 }
 */
 
-void microLED::setRGB(int num, byte r, byte g, byte b) {
+void microLED::setRGB(int num, byte r, byte g, byte b)
+{
 	LEDbuffer[num] = mRGB(r, g, b);
 }
 
-void microLED::setHSV(int num, byte h, byte s, byte v) {
+void microLED::setHSV(int num, byte h, byte s, byte v)
+{
 	LEDbuffer[num] = mHSV(h, s, v);
 }
 
 //void microLED::setHEX(int num, uint32_t color) {
-	//LEDbuffer[num] = mHEX(color);
+//LEDbuffer[num] = mHEX(color);
 //}
 
 //void microLED::colorWheel(int num, int color) {
-	//LEDbuffer[num] = mWHEEL(color);
+//LEDbuffer[num] = mWHEEL(color);
 //}
 
 //void microLED::setColor(int num, COLORS color) {
-	//LEDbuffer[num] = mCOLOR(color);
+//LEDbuffer[num] = mCOLOR(color);
 //}
 
-void microLED::setBrightness(byte newBright) {
+void microLED::setBrightness(byte newBright)
+{
 #if (COLOR_DEBTH == 1)
 	_bright = (255 - newBright) >> 5;
 #else
@@ -244,8 +251,10 @@ void microLED::setBrightness(byte newBright) {
 #endif
 }
 
-void microLED::clear() {
-	for (int i = 0; i < _numLEDs; i++) {
+void microLED::clear()
+{
+	for (int i = 0; i < _numLEDs; i++)
+	{
 #if (COLOR_DEBTH == 1)
 		LEDbuffer[i] = 0;
 #elif (COLOR_DEBTH == 2)
@@ -259,23 +268,24 @@ void microLED::clear() {
 }
 
 //void microLED::fill(LEDdata color) {
-	//for (int i = 0; i < _numLEDs; i++) {
-		//LEDbuffer[i] = color;
-	//}
+//for (int i = 0; i < _numLEDs; i++) {
+//LEDbuffer[i] = color;
+//}
 //}
 
-void microLED::setLED(int n, LEDdata color) {
+void microLED::setLED(int n, LEDdata color)
+{
 	LEDbuffer[n] = color;
 }
 
 //uint32_t microLED::getColorHEX(int num) {
-	//byte thisData[3];
-	//getColorPtr(num, thisData);
-	//return (((uint32_t)thisData[0] << 16) | ((uint32_t)thisData[1] << 8 ) | (uint32_t)thisData[2]);
+//byte thisData[3];
+//getColorPtr(num, thisData);
+//return (((uint32_t)thisData[0] << 16) | ((uint32_t)thisData[1] << 8 ) | (uint32_t)thisData[2]);
 //}
 
 //LEDdata microLED::getColor(int num) {
-	//return LEDbuffer[num];
+//return LEDbuffer[num];
 //}
 /*
 void microLED::getColorPtr(int num, byte *ptr) {
@@ -379,7 +389,7 @@ LEDdata microLED::getColor(int x, int y) {
 */
 // ======================УТИЛИТЫ =====================
 #if (COLOR_DEBTH == 2)
-#define PTR_TYPE uint16_t*
+#define PTR_TYPE uint16_t *
 #else
 #define PTR_TYPE uint8_t*
 #endif
@@ -429,17 +439,19 @@ byte microLED::correctBright() {
 */
 
 // ====================== ВЫВОД ======================
-void microLED::show() {
+void microLED::show()
+{
 	*ws2812_port_reg |= pinMask; // Enable DDR
 	//WS2812B_sendData((PTR_TYPE)LEDbuffer, (int16_t)COLOR_DEBTH * _numLEDs, pinMask, (uint8_t*) ws2812_port, (uint8_t*) ws2812_port_reg, correctBright());
 	//WS2812B_sendData((PTR_TYPE)LEDbuffer, (int16_t)COLOR_DEBTH * _numLEDs, pinMask, (uint8_t*) ws2812_port, (uint8_t*) ws2812_port_reg, _bright);
-	WS2812B_sendData((PTR_TYPE)LEDbuffer, (int16_t)COLOR_DEBTH * _numLEDs, pinMask, (uint8_t*) ws2812_port, _bright);
+	WS2812B_sendData((PTR_TYPE)LEDbuffer, (int16_t)COLOR_DEBTH * _numLEDs, pinMask, (uint8_t *)ws2812_port, _bright);
 }
 
 // ================== COLOR UTILITY ===================
-LEDdata mRGB(byte r, byte g, byte b) {
+LEDdata mRGB(byte r, byte g, byte b)
+{
 #if (COLOR_DEBTH == 1)
-	return ( (r & 0b11000000) | ((g & 0b11100000) >> 2) | (b & 0b11100000) >> 5);
+	return ((r & 0b11000000) | ((g & 0b11100000) >> 2) | (b & 0b11100000) >> 5);
 #elif (COLOR_DEBTH == 2)
 	return ((r & 0b11111000) << 8) | ((g & 0b11111100) << 3) | ((b & 0b11111000) >> 3);
 #elif (COLOR_DEBTH == 3)
@@ -451,7 +463,8 @@ LEDdata mRGB(byte r, byte g, byte b) {
 #endif
 }
 
-LEDdata mHSV(byte h, byte s, byte v) {	
+LEDdata mHSV(byte h, byte s, byte v)
+{
 #if (COLOR_DEBTH == 1)
 	// быстрый HSV
 	byte r, g, b;
@@ -460,19 +473,44 @@ LEDdata mHSV(byte h, byte s, byte v) {
 	byte a = (long)v * s / 255 * (h * 24 / 17 % 60) / 60;
 	byte vinc = vmin + a;
 	byte vdec = v - a;
-	switch (value) {
-	case 0: r = v; g = vinc; b = vmin; break;
-	case 1: r = vdec; g = v; b = vmin; break;
-	case 2: r = vmin; g = v; b = vinc; break;
-	case 3: r = vmin; g = vdec; b = v; break;
-	case 4: r = vinc; g = vmin; b = v; break;
-	case 5: r = v; g = vmin; b = vdec; break;
+	switch (value)
+	{
+	case 0:
+		r = v;
+		g = vinc;
+		b = vmin;
+		break;
+	case 1:
+		r = vdec;
+		g = v;
+		b = vmin;
+		break;
+	case 2:
+		r = vmin;
+		g = v;
+		b = vinc;
+		break;
+	case 3:
+		r = vmin;
+		g = vdec;
+		b = v;
+		break;
+	case 4:
+		r = vinc;
+		g = vmin;
+		b = v;
+		break;
+	case 5:
+		r = v;
+		g = vmin;
+		b = vdec;
+		break;
 	}
 	return mRGB(r, g, b);
 #else
 	// обычный HSV
 	static float r, g, b;
-	
+
 	float H = (float)h / 255;
 	float S = (float)s / 255;
 	float V = (float)v / 255;
@@ -483,50 +521,70 @@ LEDdata mHSV(byte h, byte s, byte v) {
 	float q = V * (1 - f * S);
 	float t = V * (1 - (1 - f) * S);
 
-	switch (i % 6) {
-	case 0: r = V, g = t, b = p; break;
-	case 1: r = q, g = V, b = p; break;
-	case 2: r = p, g = V, b = t; break;
-	case 3: r = p, g = q, b = V; break;
-	case 4: r = t, g = p, b = V; break;
-	case 5: r = V, g = p, b = q; break;	
+	switch (i % 6)
+	{
+	case 0:
+		r = V, g = t, b = p;
+		break;
+	case 1:
+		r = q, g = V, b = p;
+		break;
+	case 2:
+		r = p, g = V, b = t;
+		break;
+	case 3:
+		r = p, g = q, b = V;
+		break;
+	case 4:
+		r = t, g = p, b = V;
+		break;
+	case 5:
+		r = V, g = p, b = q;
+		break;
 	}
 	return mRGB(r * 255, g * 255, b * 255);
 #endif
 }
 
 //LEDdata mHEX(uint32_t color) {
-	//return mRGB( (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF );
+//return mRGB( (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF );
 //}
 
-LEDdata mWHEEL(int color) {
+LEDdata mWHEEL(int color)
+{
 	static byte _r, _g, _b;
-	if (color <= 255) {           // красный макс, зелёный растёт
+	if (color <= 255)
+	{ // красный макс, зелёный растёт
 		_r = 255;
 		_g = color;
 		_b = 0;
 	}
-	else if (color > 255 && color <= 510) {   // зелёный макс, падает красный
+	else if (color > 255 && color <= 510)
+	{ // зелёный макс, падает красный
 		_r = 510 - color;
 		_g = 255;
 		_b = 0;
 	}
-	else if (color > 510 && color <= 765) {   // зелёный макс, растёт синий
+	else if (color > 510 && color <= 765)
+	{ // зелёный макс, растёт синий
 		_r = 0;
 		_g = 255;
 		_b = color - 510;
 	}
-	else if (color > 765 && color <= 1020) {  // синий макс, падает зелёный
+	else if (color > 765 && color <= 1020)
+	{ // синий макс, падает зелёный
 		_r = 0;
 		_g = 1020 - color;
 		_b = 255;
 	}
-	else if (color > 1020 && color <= 1275) {   // синий макс, растёт красный
+	else if (color > 1020 && color <= 1275)
+	{ // синий макс, растёт красный
 		_r = color - 1020;
 		_g = 0;
 		_b = 255;
 	}
-	else if (color > 1275 && color <= 1530) { // красный макс, падает синий
+	else if (color > 1275 && color <= 1530)
+	{ // красный макс, падает синий
 		_r = 255;
 		_g = 0;
 		_b = 1530 - color;
@@ -535,5 +593,5 @@ LEDdata mWHEEL(int color) {
 }
 
 //LEDdata mCOLOR(COLORS color) {
-	//return mHEX(color);
+//return mHEX(color);
 //}
