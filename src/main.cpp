@@ -1,5 +1,4 @@
 //****************************************************************************************************************
-// Проверяем
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "LCD_1602_RUS.h"
@@ -32,19 +31,19 @@ void oled_Setup_Multirazliv();        // Экран настройки МУЛЬ�
 void oled_Mushketery();               // Экраны меню "МУШКЕТЁРЫ"
 void play_Mushketery();               // Режим МУШКЕТЕРЫ
 void Play_track(uint8_t trackNum);    // Воспроизведение трека
+void Button_Tower();                  // Обработка кнопки на башне
+void EncTick();                       // Кнопки-крутилки
+void flowTick();                      // Наливайка, опрос концевиков
+void flowRoutnie();                   // Поиск и заливка
+void Servo_move(uint8_t target);      // Управление SERVO
+void Energy_Saving();                 // Энергосбережение
 
-void flowTick();                      // 
-void flowRoutnie();                   // 
-void servo_move(uint8_t target);      // ********** ? **********
-void energy_saving();                 // ********** ? **********
 void ret_menu();                      // 
 void bat_tery();                      // 
 void mix();                           // 
 void mix_music();                     // 
 void play_next();                     // 
-void button_tower();                 // 
 //void move_enc(uint8_t* var, int16_t shift, int16_t lowLimit, int16_t upLimit, bool cycle);
-void EncTick();                       // 
 void num_folder(uint8_t subFolder);   // 
 void bar_man(uint8_t subBarmen);      // 
 void mix_track();                     // 
@@ -59,7 +58,7 @@ void Tost();                          //
 #define DEBUG_UART 0                // отладка, 0 выключено, 1 включено
 #define LED_TOWER                   // светодиоды на башне. Раcкомментировать если есть
   #if (DEBUG_UART == 0)
-    //#define BUTTON_TOWER            // сенсорная кнопка на башне. Раскомментировать если есть
+    //#define Button_Tower            // сенсорная кнопка на башне. Раскомментировать если есть
   #endif
 //#define BAT_MONITOR_ON            // включение в коде всё что звязано с АКБ, закомментировать если нет АКБ вообще.
   #ifdef BAT_MONITOR_ON
@@ -98,11 +97,11 @@ void Tost();                          //
   const uint8_t SW_pins[] = {8, 7, A3, A2, A1, A0}; // Пины концевиков для Arduino NANO
 #endif 
 
-  #define CLK 2              // Энкодер CLK для Arduino NANO
-  #define DT  3               // Энкодер DT для Arduino NANO
-  #define SW  4               // Энкодер SW для Arduino NANO
+  #define Lcd_CLK 2              // Энкодер Lcd_CLK для Arduino NANO
+  #define Lcd_DT  3               // Энкодер Lcd_DT для Arduino NANO
+  #define Lcd_SW  4               // Энкодер Lcd_SW для Arduino NANO
 
-  #define LED_PIN 5           // Лента 1 для Arduino NANO
+  #define LED1_PIN 5           // Лента 1 для Arduino NANO
 
   #define SERVO_PIN   9       // Servo для Arduino NANO. Можно только 9, 10 Пины!!!!!!!!
 
@@ -115,11 +114,11 @@ void Tost();                          //
   #define BUSY_PIN 12         // Пин готовности DF плеера для Arduino NANO
 
  #ifdef LED_TOWER
-    #define LED_PIN2 A3       // Пин второй ленты для Arduino NANO
+    #define LED2_PIN A3       // Пин второй ленты для Arduino NANO
  #endif
 
- #ifdef BUTTON_TOWER
-    #define BUT_TOWER_PIN A6  // A7   // Пин кнопки на башне для Arduino NANO
+ #ifdef Button_Tower
+    #define BUT_TOWER_PIN A6  // A6   // Пин кнопки на башне для Arduino NANO
  #endif
 
 //****************************************************************************************************************
@@ -132,19 +131,19 @@ void Tost();                          //
   const uint8_t SW_pins[] = {A8, A7, A3, A2, A1, A0};  //  Пины концевиков для Arduino mega
 #endif
   #define PUMP_POWER 12                       // помпа для Arduino mega
-  #define LED_PIN 5                           // Пин ленты для Arduino mega
+  #define LED1_PIN 5                           // Пин ленты для Arduino mega
  #ifdef BAT_MONITOR_ON
    #define BAT_PIN A9                         // Пин замера напряжения акб для Arduino mega
  #endif
   #define BUSY_PIN 10                         // Пин готовности DF плеера для Arduino mega
   // Пины ЭНКОДЕРА
-  #define CLK  7                              // для Arduino mega
-  #define DT  6                               // для Arduino mega
-  #define SW  4                               // кнопка энкодера для Arduino mega
+  #define Lcd_CLK  7                              // для Arduino mega
+  #define Lcd_DT  6                               // для Arduino mega
+  #define Lcd_SW  4                               // кнопка энкодера для Arduino mega
   #ifdef LED_TOWER
-    #define LED_PIN2 11                       // Пин второй ленты для Arduino mega
+    #define LED2_PIN 11                       // Пин второй ленты для Arduino mega
   #endif
-  #ifdef BUTTON_TOWER
+  #ifdef Button_Tower
     #define BUT_TOWER_PIN 22                  // Пин кнопки на башне для Arduino mega
   #endif
 #else
@@ -154,20 +153,20 @@ void Tost();                          //
 //****************************************************************************************************************
 //********** ИНИЦИАЛИЗАЦИЯ **********
 LEDdata Leds[NUM_SHOTS];                      // буфер ленты типа LEDdata (размер зависит от COLOR_DEBTH)
-microLED Strip(Leds, NUM_SHOTS, LED_PIN);     // объект лента
+microLED Strip1(Leds, NUM_SHOTS, LED1_PIN);     // объект лента
 #ifdef LED_TOWER
   #define NUMLEDS 16                          // колличество светиков во второй ленте
   LEDdata Leds2[NUMLEDS];                     // буфер ленты типа LEDdata (размер зависит от COLOR_DEBTH)
-  microLED Strip2(Leds2, NUMLEDS, LED_PIN2);  // объект лента
+  microLED Strip2(Leds2, NUMLEDS, LED2_PIN);  // объект лента
   timerMinim TOWERtimer(20);
   bool mig = false;
   bool rainbow = true;
   bool clearLed = false;
 #endif
-#ifdef BUTTON_TOWER
+#ifdef Button_Tower
     bool stateBut = false;
 #endif
-encMinim Enc(CLK, DT, SW, 0);   // пин clk, пин dt, пин sw, направление (0/1)
+encMinim Enc(Lcd_CLK, Lcd_DT, Lcd_SW, 0);   // пин Lcd_CLK, пин Lcd_DT, пин Lcd_SW, направление (0/1)
 LCD_1602_RUS lcd(0x27, 16, 2);  //Адрес дисплея 0x27 или 0x3F, подключение А4-SDA-зеленый, А5-SCL-желтый
 DFPlayerMini_Fast myMP3;
 Adafruit_TiCoServo servo;
@@ -279,8 +278,8 @@ uint8_t power[8] = {B01010, B01010, B11111, B11111, B11111, B01110, B00100, B001
 
 //****************************************************************************************************
 void setup() {
-  Strip.clear();
-  Strip.show();
+  Strip1.clear();
+  Strip1.show();
 #ifdef LED_TOWER
   Strip2.clear();
   Strip2.show();
@@ -323,7 +322,7 @@ void setup() {
   }
   pinMode(BUSY_PIN, INPUT);
 
-#ifdef BUTTON_TOWER
+#ifdef Button_Tower
   pinMode(BUT_TOWER_PIN, INPUT);
 #endif
 
@@ -409,7 +408,7 @@ void setup() {
   print_lcd(0);                                       // НУ,
   lcd.setCursor(1, 1);
   print_lcd(1);                                       // НАА-ЧАА-ЛИИИИ!
-  Strip.setBrightness(bright);
+  Strip1.setBrightness(bright);
 #ifdef LED_TOWER
   Strip2.setBrightness(bright);
 #endif
@@ -442,12 +441,12 @@ void loop() {
     flowTick();
     CvetoMuzik();
     play_Mushketery();
-    energy_saving();
+    Energy_Saving();
     Tost();
     ret_menu();
     play_next();
-#ifdef BUTTON_TOWER
-    button_tower ();
+#ifdef Button_Tower
+    Button_Tower ();
 #endif
 #ifdef BAT_MONITOR_ON
   }
@@ -463,7 +462,7 @@ void Play_track(uint8_t trackNum) {
 }
 
 
-//********** наливайка, опрос концевиков **********
+//********** Наливайка, опрос концевиков **********
 void flowTick() {
   if (FLOWdebounce.isReady()) {
     for (uint8_t i = 0; i < NUM_SHOTS; i++) {
@@ -471,9 +470,9 @@ void flowTick() {
       if (shotStates[i] == NO_GLASS && swState && readySystem) {  // поставили пустую рюмку
         shotStates[i] = EMPTY;                                    // флаг на заправку
 #ifndef SERVO_CHANGE_DIRECTION
-        Strip.setLED(i, mRGB(255, 0, 0));                         // подсветили красный
+        Strip1.setLED(i, mRGB(255, 0, 0));                         // подсветили красный
 #else
-        Strip.setLED(NUM_SHOTS - 1 - i, mRGB(255, 0, 0));         // подсветили красный
+        Strip1.setLED(NUM_SHOTS - 1 - i, mRGB(255, 0, 0));         // подсветили красный
 #endif
         LEDchanged = true;
         //DEBUG("set glass");
@@ -510,9 +509,9 @@ void flowTick() {
         shotStates[i] = NO_GLASS;                           // статус - нет рюмки
         if (!ledShow) {
 #ifndef SERVO_CHANGE_DIRECTION
-          Strip.setLED(i, mRGB(0, 0, 0));                   // чёрный
+          Strip1.setLED(i, mRGB(0, 0, 0));                   // чёрный
 #else
-          Strip.setLED(NUM_SHOTS - 1 - i, mRGB(0, 0, 0));   // чёрный
+          Strip1.setLED(NUM_SHOTS - 1 - i, mRGB(0, 0, 0));   // чёрный
 #endif
           LEDchanged = true;
         }
@@ -591,9 +590,9 @@ void flowRoutnie() {
 #endif
         readySystem = false;
 #ifdef STARTING_POS_SERVO_GLASS1
-        servo_move(shotPos[0]);                                 // цель серво - первая рюмка
+        Servo_move(shotPos[0]);                                 // цель серво - первая рюмка
 #else
-        servo_move(0);                                          // цель серво - 0
+        Servo_move(0);                                          // цель серво - 0
 #endif
         if (!moving) {                                          // едем до упора
           PAUSEtimer.setInterval(4000);
@@ -656,7 +655,7 @@ void flowRoutnie() {
         else oled_Promivka(1);
         flag = false;
       }
-      servo_move(shotPos[curPumping]);
+      Servo_move(shotPos[curPumping]);
       if (!moving) {                                            // если приехали
         systemState = PUMPING;                                  // режим - наливание
         if (!promivka) TIMEProcent.setInterval(time50ml / 50);  // перенастроили таймер,
@@ -692,7 +691,7 @@ void flowRoutnie() {
           lcd.print(Procent, DEC);
         } else {
           if ( MenuFlag == 11  && (Procent >= 7000 || !Enc.isHold())) readyDrink = true;
-#ifdef BUTTON_TOWER
+#ifdef Button_Tower
           else if (MenuFlag != 11  && (Procent >= 7000  || !stateBut)) readyDrink = true;
 #endif
         }
@@ -701,11 +700,11 @@ void flowRoutnie() {
         pumpOFF();                                                  // помпа выкл
         shotStates[curPumping] = READY;                             // налитая рюмка, статус: готов
 #ifndef SERVO_CHANGE_DIRECTION
-        Strip.setLED(curPumping, mRGB(0, 255, 0));                  // подсветили
+        Strip1.setLED(curPumping, mRGB(0, 255, 0));                  // подсветили
 #else
-        Strip.setLED(NUM_SHOTS - 1 - curPumping, mRGB(0, 255, 0));  // подсветили
+        Strip1.setLED(NUM_SHOTS - 1 - curPumping, mRGB(0, 255, 0));  // подсветили
 #endif
-        Strip.show();
+        Strip1.show();
         curPumping = -1;                                            // снимаем выбор рюмки
         systemState = WAIT;                                         // режим работы - ждать
         WAITtimer.reset();
@@ -725,9 +724,9 @@ void flowRoutnie() {
           } else {
             do {
 #ifdef STARTING_POS_SERVO_GLASS1
-              servo_move(shotPos[0]);                               // цель серво - первая рюмка
+              Servo_move(shotPos[0]);                               // цель серво - первая рюмка
 #else
-              servo_move(0);                                        // цель серво - 0
+              Servo_move(0);                                        // цель серво - 0
 #endif
             } while (moving);
             returnMenu = true;
@@ -740,8 +739,8 @@ void flowRoutnie() {
 }
 
 
-//********** ? **********
-void servo_move(uint8_t target) {
+//********** Управление SERVO **********
+void Servo_move(uint8_t target) {
   static uint32_t prevServoTime = 0;
 #ifdef SERVO_CHANGE_DIRECTION
   target = 180 - target;
@@ -786,14 +785,14 @@ void servo_move(uint8_t target) {
 }
 
 
-// ********** ? **********
-void energy_saving() {
+// ********** Энергосбережение **********
+void Energy_Saving() {
   if (sleepTime != 0 && !systemON && !tost && !save && SAVEtimer.isReady()) {
     Play_track(16);
-    lcd.noBacklight();
-    save = true;
-    Strip.clear();
-    Strip.show();
+    lcd.noBacklight();  // Отключить подсветку дисплея
+    save = true;        // 
+    Strip1.clear();      // Отключить светодиоды
+    Strip1.show();       //
   }
 }
 
@@ -831,8 +830,8 @@ void bat_tery() {
           player = false;
           myMP3.stop();
         }
-        Strip.clear();
-        Strip.show();
+        Strip1.clear();
+        Strip1.show();
       }
 #endif
     } else if (value < 690) {     // 3.2 вольта 677
@@ -958,8 +957,9 @@ void print_lcd (const uint8_t n) {
 }
 
 
-#ifdef BUTTON_TOWER
-void button_tower () {
+//********** Обработка кнопки на башне **********
+#ifdef Button_Tower
+void Button_Tower () {
   static uint32_t butTowTime = 0;
   static uint8_t clickCount = 0;
   static bool lastStateBut = false;
@@ -1053,10 +1053,10 @@ void play_Mushketery() {
 
   if (playMush) {
     if (!muveServo) {
-      servo_move(shotPos[NUM_SHOTS - 1]);
+      Servo_move(shotPos[NUM_SHOTS - 1]);
       if (!moving) muveServo = true;
     } else {
-      servo_move(shotPos[0]);
+      Servo_move(shotPos[0]);
       if (!moving) muveServo = false;
     }
     if ( digitalRead(BUSY_PIN) || player) {
@@ -1134,7 +1134,7 @@ void EncTick() {
       if (Enc.isLeft()) drift--;
       if (Enc.isRight()) drift++;
       switch (MenuFlag) {
-        case 0:    // главное меню
+        case 0:    // главное меню 
           move_enc(&Menu, drift, 0, 4, true); // Перемещение  по главному меню
           oled_main_screen();
           break;
@@ -1193,7 +1193,7 @@ void EncTick() {
         case 15: // меню настройки яркости led
           move_enc(&bright, drift * 5, 0, 255, false);
           oled_Brightness(1);
-          Strip.setBrightness(bright);
+          Strip1.setBrightness(bright);
 #ifdef LED_TOWER
           Strip2.setBrightness(bright);
 #endif
@@ -1349,9 +1349,9 @@ void EncTick() {
         servoPos = 0;
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
-          servo_move(shotPos[0]);                             // цель серво - первая рюмка
+          Servo_move(shotPos[0]);                             // цель серво - первая рюмка
 #else
-          servo_move(0);                                     // цель серво - 0
+          Servo_move(0);                                     // цель серво - 0
 #endif
         } while (moving);
         oled_servo();
@@ -1410,9 +1410,9 @@ void EncTick() {
         MenuFlag = 4;
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
-          servo_move(shotPos[0]);                             // цель серво - первая рюмка
+          Servo_move(shotPos[0]);                             // цель серво - первая рюмка
 #else
-          servo_move(0);                                     // цель серво - 0
+          Servo_move(0);                                     // цель серво - 0
 #endif
         } while (moving);
         oled_Nastroiki();
@@ -1466,9 +1466,9 @@ void EncTick() {
 
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
-          servo_move(shotPos[0]);                             // цель серво - первая рюмка
+          Servo_move(shotPos[0]);                             // цель серво - первая рюмка
 #else
-          servo_move(0);                                     // цель серво - 0
+          Servo_move(0);                                     // цель серво - 0
 #endif
         } while (moving);
         delay(3000);
@@ -1499,7 +1499,7 @@ void EncTick() {
           systemON = true;
           flag = true; // флаг ,если пустые рюмки найдены показываем меню налива
           if (noDoliv == 1) readySystem = false;
-#ifdef BUTTON_TOWER
+#ifdef Button_Tower
           if ( stateBut) promivka = true;
 #endif
           if (ledShowOn) {
@@ -1627,9 +1627,9 @@ void EncTick() {
       } else if (MenuFlag == 11 ) { // меню настройки промывка
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
-          servo_move(shotPos[0]);                             // цель серво - первая рюмка
+          Servo_move(shotPos[0]);                             // цель серво - первая рюмка
 #else
-          servo_move(0);                                     // цель серво - 0
+          Servo_move(0);                                     // цель серво - 0
 #endif
         } while (moving);
         oled_Nastroiki();
@@ -1648,14 +1648,14 @@ void EncTick() {
 
       } else if (MenuFlag == 42) {  // двигаем серво туда-обратно для наглядности установленной скорости
         do {
-          servo_move(180);
+          Servo_move(180);
         } while (moving);
 
         do {
 #ifdef STARTING_POS_SERVO_GLASS1
-          servo_move(shotPos[0]);                             // цель серво - первая рюмка
+          Servo_move(shotPos[0]);                             // цель серво - первая рюмка
 #else
-          servo_move(0);                                     // цель серво - 0
+          Servo_move(0);                                     // цель серво - 0
 #endif
         } while (moving);
 
@@ -1672,7 +1672,7 @@ void EncTick() {
         servoPos = shotPos[count];
         oled_Servo_calibr(1);
         do {
-          servo_move(servoPos);
+          Servo_move(servoPos);
         } while (moving);
       }
     }
@@ -2250,21 +2250,21 @@ void CvetoMuzik() {
       if (++count > 3) {
         count = 0;
 #ifndef SERVO_CHANGE_DIRECTION
-        Strip.setLED(curPumping, mWHEEL(col));                // зажгли цвет
+        Strip1.setLED(curPumping, mWHEEL(col));                // зажгли цвет
 #else
-        Strip.setLED(NUM_SHOTS - 1 - curPumping, mWHEEL(col));// зажгли цвет
+        Strip1.setLED(NUM_SHOTS - 1 - curPumping, mWHEEL(col));// зажгли цвет
 #endif
-        Strip.show();
+        Strip1.show();
         col += 450;
         if (col > 1350) col = 0;
       }
     } else {
 #ifndef SERVO_CHANGE_DIRECTION
-      Strip.setLED(led , mWHEEL(col));
+      Strip1.setLED(led , mWHEEL(col));
 #else
-      Strip.setLED(NUM_SHOTS - 1 - led , mWHEEL(col));
+      Strip1.setLED(NUM_SHOTS - 1 - led , mWHEEL(col));
 #endif
-      Strip.show();
+      Strip1.show();
       if (++led >= NUM_SHOTS) {
         led = 0;
         col += 450;
@@ -2281,13 +2281,13 @@ void CvetoMuzik() {
   if (check) {                                              // проверка рюмок
     for (led = 0; led < NUM_SHOTS; led++) {
 #ifndef SERVO_CHANGE_DIRECTION
-      if (shotStates[led] == READY) Strip.setLED(led, mRGB(0, 255, 0));                       // налитая рюмка, статус: готов
-      else if (shotStates[led] == EMPTY) Strip.setLED(led, mRGB(255, 0, 0));
-      else if (shotStates[led] == NO_GLASS) Strip.setLED(led, mRGB(0, 0, 0));
+      if (shotStates[led] == READY) Strip1.setLED(led, mRGB(0, 255, 0));                       // налитая рюмка, статус: готов
+      else if (shotStates[led] == EMPTY) Strip1.setLED(led, mRGB(255, 0, 0));
+      else if (shotStates[led] == NO_GLASS) Strip1.setLED(led, mRGB(0, 0, 0));
 #else
-      if (shotStates[led] == READY) Strip.setLED(NUM_SHOTS - 1 - led, mRGB(0, 255, 0));       // налитая рюмка, статус: готов
-      else if (shotStates[led] == EMPTY) Strip.setLED(NUM_SHOTS - 1 - led, mRGB(255, 0, 0));
-      else if (shotStates[led] == NO_GLASS) Strip.setLED(NUM_SHOTS - 1 - led, mRGB(0, 0, 0));
+      if (shotStates[led] == READY) Strip1.setLED(NUM_SHOTS - 1 - led, mRGB(0, 255, 0));       // налитая рюмка, статус: готов
+      else if (shotStates[led] == EMPTY) Strip1.setLED(NUM_SHOTS - 1 - led, mRGB(255, 0, 0));
+      else if (shotStates[led] == NO_GLASS) Strip1.setLED(NUM_SHOTS - 1 - led, mRGB(0, 0, 0));
 #endif
     }
     LEDtimer.reset();
@@ -2301,7 +2301,7 @@ void CvetoMuzik() {
   // отрисовка светодиодов по флагу
   if (!ledShow && LEDchanged && LEDtimer.isReady()) {
     LEDchanged = false;
-    Strip.show();
+    Strip1.show();
   }
   // Башня LED
 #ifdef LED_TOWER
