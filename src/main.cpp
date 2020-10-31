@@ -31,6 +31,9 @@ void oled_Setup_Multirazliv();            // Экран настройки МУ�
 void oled_Mushketery();                   // Экраны меню "МУШКЕТЁРЫ"
 void play_Mushketery();                   // Режим МУШКЕТЕРЫ
 void oled_Kalibr_Pump(uint8_t subPump);   // Экраны меню "НАСТРОЙКИ" -> "КАЛИБРОВКА ПОМПЫ"
+void oled_Num_Folder(uint8_t subFolder);  // Настройки -> Тосты -> Папка с треками
+void oled_mix_Tost();                     // Экран меню Настройки -> Тосты -> Перемешать треки
+void Tost();                              // Экран вывода тостов
 void Play_track(uint8_t trackNum);        // Воспроизведение трека
 void Button_Tower();                      // Обработка кнопки на башне
 void EncTick();                           // Кнопки-крутилки
@@ -39,18 +42,13 @@ void flowRoutnie();                       // Поиск и заливка
 void Servo_move(uint8_t target);          // Управление SERVO
 void Energy_Saving();                     // Энергосбережение
 void Mon_Battery();                       // Монитор питания и защита батареи
-
-void ret_menu();                    //
-void mix();                         //
-void mix_music();                   //
-void play_next();                   //
-void num_folder(uint8_t subFolder); //
-void bar_man(uint8_t subBarmen);    //
-void mix_track();                   //
-void bat_volt();                    //
-void sleep_time(uint8_t subTime);   //
-void CvetoMuzik();                  //
-void Tost();                        //
+void ret_menu();                          // Выход из некоторых меню
+void mix();                               // Перемешиваем тосты
+void mix_music();                         // Перемешиваем песни
+void play_next();                         // Воспроизведение следующего трека
+void oled_Sleep_Time(uint8_t subTime);    // Экран настройки таймер сна
+void CvetoMuzik();                        // Светомузыка
+void oled_Bar_Man(uint8_t subBarmen);     // Экран меню Настройки -> Бармен-Долив
 
 //****************************************************************************************************************
 //======== НАСТРОЙКИ ========
@@ -72,7 +70,7 @@ void Tost();                        //
 #define PRE_PAUSE 1000UL       // пауза серво перед движением к рюмке
 #define POST_PAUSE 500UL       // пауза после остановки сервы до включения помпы
 #define MEMORY_ON              // включение записи параметров в память, закомментировано - значит выключено!
-#define START_POS_SERVO_GLASS1 // раскомментировать, если нужна начальная позиция серво в первой рюмке \
+#define START_POS_SERVO_GLASS1 // раскомментировать, если нужна начальная позиция серво в первой рюмке
 //#define SERVO_CHANGE_DIRECTION    // раскомментировать, отзеркалить движение серво
 #ifdef SERVO_CHANGE_DIRECTION
 #define INITAL_ANGLE_SERVO 180 // начальный угол на который становится серво, если включен режим зеркало, подбирать в меньшую сторону, если упирается серво.
@@ -130,8 +128,8 @@ const uint8_t SW_pins[] = {A8, A7, A3, A2, A1, A0}; // Пины концевик
 #ifdef BAT_MONITOR_ON
 #define BAT_PIN A9 // Пин замера напряжения акб для Arduino mega
 #endif
-#define BUSY_PIN 10 // Пин готовности DF плеера для Arduino mega \
-                    // Пины ЭНКОДЕРА
+#define BUSY_PIN 10 // Пин готовности DF плеера для Arduino mega
+// Пины ЭНКОДЕРА
 #define Lcd_CLK 7   // для Arduino mega
 #define Lcd_DT 6    // для Arduino mega
 #define Lcd_SW 4    // кнопка энкодера для Arduino mega
@@ -208,7 +206,7 @@ uint8_t ManDrink[] = {0, 0, 0, 0, 0, 0};
 uint8_t TostList[100];  // массив номеров треков тостов, в нём перемешаем всё, максимум 100 тостов. нужно ли столько?
 uint8_t MusicList[100]; // массив номеров песенок, в нём перемешаем всё, максимум 100
 uint8_t ManRum = 1;
-uint8_t mixTracks = 0;
+uint8_t mixTost = 0;
 uint8_t mixMusic = 0;
 uint8_t folTra = 1; //
 uint8_t oldNum = 1; //
@@ -385,9 +383,9 @@ void setup()
     time50ml = 5000;
 
   address = 70;
-  EEPROM.get(address, mixTracks); // считываем из памяти флаг перемешивания тостов
-  if (mixTracks > 1)
-    mixTracks = 0;
+  EEPROM.get(address, mixTost); // считываем из памяти флаг перемешивания тостов
+  if (mixTost > 1)
+    mixTost = 0;
 
   address = 80;
   EEPROM.get(address, folder); // считываем из памяти номер папки треков тостов
@@ -908,6 +906,7 @@ void Energy_Saving()
   }
 }
 
+//********** Выход из некоторых меню **********
 void ret_menu()
 {
   if (returnMenu && PAUSEtimer.isReady())
@@ -1030,6 +1029,7 @@ void Mon_Battery()
 }
 #endif
 
+//********** Перемешиваем тосты **********
 void mix()
 {
   if (tracks != -1)
@@ -1037,7 +1037,7 @@ void mix()
     for (uint8_t i = 0; i < tracks; i++)
       TostList[i] = i; // заполняем массив тостов, последовательно значениями
     num = 0;
-    if (mixTracks == 1)
+    if (mixTost == 1)
     {
       randomSeed(CreateTrulyRandomSeed()); // инициализирует генератор псевдослучайных чисел
       for (uint8_t i = tracks - 1; i > 0; i--)
@@ -1051,6 +1051,7 @@ void mix()
   }
 }
 
+//********** Перемешиваем песни **********
 void mix_music()
 {
   if (tracks2 != -1)
@@ -1071,6 +1072,7 @@ void mix_music()
   }
 }
 
+//********** Воспроизведение следующего трека **********
 void play_next()
 {
   if (player && !pause && PLAYtimer.isReady() && !nextTrack)
@@ -1440,12 +1442,12 @@ void EncTick()
       case 16: // меню включения-выключения бармена
         if (++barMan > 1)
           barMan = 0;
-        bar_man(1);
+        oled_Bar_Man(1);
         break;
 
       case 19: // меню настройки времени таймера сна
         move_enc(&sleepTime, drift, 0, 19, false);
-        sleep_time(1);
+        oled_Sleep_Time(1);
         break;
 
       case 20: //  меню настройки времени налива 50 мл.
@@ -1464,9 +1466,9 @@ void EncTick()
         break;
 
       case 32: // меню включения-выключения перемешивания тостов
-        if (++mixTracks > 1)
-          mixTracks = 0;
-        mix_track();
+        if (++mixTost > 1)
+          mixTost = 0;
+        oled_mix_Tost();
         break;
 
       case 33:                                // меню выбора папки тостов
@@ -1474,7 +1476,7 @@ void EncTick()
         tracks = myMP3.numTracksInFolder(folder);
         if (tracks > 100)
           tracks = 100;
-        num_folder(1);
+        oled_Num_Folder(1);
         break;
 
       case 40:                                 // меню выбора настроек серво
@@ -1605,7 +1607,7 @@ void EncTick()
         oled_Tost();
 #ifdef MEMORY_ON
         address = 70;
-        EEPROM.update(address, mixTracks); // обновляем в памяти флаг перемешивания тостов
+        EEPROM.update(address, mixTost); // обновляем в памяти флаг перемешивания тостов
 #endif
         mix(); // перемешиваем треки, если включено
       }
@@ -1924,7 +1926,7 @@ void EncTick()
           break;
         case 6: // режим бармен
           MenuFlag = 16;
-          bar_man(0);
+          oled_Bar_Man(0);
           break;
         case 7: // калибровка помпы
           MenuFlag = 20;
@@ -1932,12 +1934,12 @@ void EncTick()
           break;
         case 8: // таймер сна
           MenuFlag = 19;
-          sleep_time(0);
+          oled_Sleep_Time(0);
           break;
 #ifdef BAT_MONITOR_ON
         case 9: // напряжение батареи
           MenuFlag = 18;
-          bat_volt();
+          oled_Bat_Volt();
           break;
 #endif
         }
@@ -1966,12 +1968,12 @@ void EncTick()
       else if (MenuFlag == 30 && subMenu == 2)
       { // вошли из меню тост в настройку перемешивания треков
         MenuFlag = 32;
-        mix_track();
+        oled_mix_Tost();
       }
       else if (MenuFlag == 30 && subMenu == 3)
       { // вошли из меню тост в настройку   папки проигрывания
         MenuFlag = 33;
-        num_folder(0);
+        oled_Num_Folder(0);
       }
       else if (MenuFlag == 40 && subMenu == 1)
       { // вошли из меню сервы в настройку положения сервы над рюмками
@@ -2011,7 +2013,7 @@ void EncTick()
       { // меню настройки долив-бармен
         if (++noDoliv > 1)
           noDoliv = 0;
-        bar_man(2);
+        oled_Bar_Man(2);
       }
       else if (MenuFlag == 31)
       { //меню настройки громкости
@@ -2342,15 +2344,16 @@ void oled_Tost()
   }
 }
 
-void num_folder(uint8_t subFolder)
+//********** Настройки -> Тосты -> Папка с треками **********
+void oled_Num_Folder(uint8_t subFolder)
 {
   if (subFolder == 0)
   {
     lcd.clear();
     lcd.setCursor(3, 0);
-    print_lcd(43); // ПАПКА
+    print_lcd(43); // ДИР:
     lcd.setCursor(2, 1);
-    print_lcd(44); // ТРЕКОВ
+    print_lcd(44); // ТРЕКОВ:
   }
   if (subFolder == 1 || subFolder == 0)
   {
@@ -2554,7 +2557,8 @@ void oled_Promivka(uint8_t subPromivka)
   }
 }
 
-void bar_man(uint8_t subBarmen)
+//********** Экран меню Настройки -> Бармен-Долив **********
+void oled_Bar_Man(uint8_t subBarmen)
 {
   if (subBarmen == 0)
   {
@@ -2582,17 +2586,18 @@ void bar_man(uint8_t subBarmen)
   }
 }
 
-void mix_track()
+//********** Экран меню Настройки -> Тосты -> Перемешать треки **********
+void oled_mix_Tost()
 {
   lcd.clear();
   lcd.setCursor(6, 1);
-  if (mixTracks == 1)
+  if (mixTost == 1)
     print_lcd(54); // ВКЛ.
   else
     print_lcd(55); // ВЫКЛ.
 }
 
-// Экран меню НАСТРОЙКИ -> МЕНЮ СЕРВО -> СКОРОСТЬ
+//********** Экран меню НАСТРОЙКИ -> МЕНЮ СЕРВО -> СКОРОСТЬ **********
 void oled_Servo_speed(uint8_t subSS)
 {
   if (subSS == 0)
@@ -2613,8 +2618,9 @@ void oled_Servo_speed(uint8_t subSS)
   }
 }
 
+//********** Экран меню состояния батареи **********
 #ifdef BAT_MONITOR_ON
-void bat_volt()
+void oled_Bat_Volt()
 {
   lcd.clear();
   lcd.setCursor(3, 0);
@@ -2626,7 +2632,9 @@ void bat_volt()
 }
 #endif
 
-void sleep_time(uint8_t subTime)
+
+//********** Экран настройки таймер сна **********
+void oled_Sleep_Time(uint8_t subTime)
 {
   if (subTime == 0)
   {
@@ -2662,6 +2670,7 @@ void sleep_time(uint8_t subTime)
   }
 }
 
+
 //********** Экраны меню "НАСТРОЙКИ" -> "КАЛИБРОВКА ПОМПЫ" **********
 void oled_Kalibr_Pump(uint8_t subPump)
 {
@@ -2681,6 +2690,7 @@ void oled_Kalibr_Pump(uint8_t subPump)
     print_lcd(64); // ml
   }
 }
+
 
 //********** Экраны меню "МУШКЕТЁРЫ" **********
 void oled_Mushketery()
@@ -2705,6 +2715,7 @@ void oled_Mushketery()
   }
 }
 
+//********** Светомузыка **********
 void CvetoMuzik()
 {
   static uint8_t led = 0;
@@ -2873,6 +2884,7 @@ void CvetoMuzik()
 #endif
 }
 
+//********** Экран вывода тостов **********
 void Tost()
 {
   static bool readyTost = false;
@@ -2885,7 +2897,7 @@ void Tost()
         myMP3.volume(volume);
         lcd.clear();
         lcd.setCursor(4, 0);
-        print_lcd(2); // ТРЕК
+        print_lcd(2); // ТРЕК -
         lcd.setCursor(11, 0);
         lcd.print((TostList[num] + 1), DEC);
         lcd.setCursor(2, 1);
