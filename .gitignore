@@ -1,5 +1,15 @@
-.pio
+#.pio
 .vscode
 .Files
 *.workspace
 *.pdsbak
+*.exe
+*.dll
+*.dblite
+*.checksum
+.vscode
+*.apk
+*.lib
+*.a
+*.o
+*.ocx
