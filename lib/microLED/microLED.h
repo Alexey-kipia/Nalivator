@@ -389,7 +389,7 @@ LEDdata microLED::getColor(int x, int y) {
 */
 // ======================УТИЛИТЫ =====================
 #if (COLOR_DEBTH == 2)
-#define PTR_TYPE uint16_t *
+#define PTR_TYPE uint16_t*
 #else
 #define PTR_TYPE uint8_t*
 #endif
